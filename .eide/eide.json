@@ -1,0 +1,359 @@
+{
+  "name": "sisfall-stm32",
+  "type": "ARM",
+  "dependenceList": [],
+  "srcDirs": [],
+  "virtualFolder": {
+    "name": "<virtual_root>",
+    "files": [],
+    "folders": [
+      {
+        "name": "USER",
+        "files": [
+          {
+            "path": "main.c"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "HARDWARE",
+        "files": [
+          {
+            "path": "HARDWARE/LED/led.c"
+          },
+          {
+            "path": "HARDWARE/KEY/key.c"
+          },
+          {
+            "path": "HARDWARE/LCD/lcd.c"
+          },
+          {
+            "path": "HARDWARE/BEEP/beep.c"
+          },
+          {
+            "path": "HARDWARE/MPU6050/mpuiic.c"
+          },
+          {
+            "path": "HARDWARE/MPU6050/mpu6050.c"
+          },
+          {
+            "path": "HARDWARE/MPU6050/eMPL/inv_mpu.c"
+          },
+          {
+            "path": "HARDWARE/MPU6050/eMPL/inv_mpu_dmp_motion_driver.c"
+          },
+          {
+            "path": "HARDWARE/SVM/svm_model.h"
+          },
+          {
+            "path": "HARDWARE/SVM/svm_model.c"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "SYSTEM",
+        "files": [
+          {
+            "path": "SYSTEM/delay/delay.c"
+          },
+          {
+            "path": "SYSTEM/sys/sys.c"
+          },
+          {
+            "path": "SYSTEM/usart/usart.c"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "CORE",
+        "files": [
+          {
+            "path": "CORE/core_cm3.c"
+          },
+          {
+            "path": "CORE/startup_stm32f10x_hd.s"
+          },
+          {
+            "path": "CORE/stm32f10x_it.c"
+          },
+          {
+            "path": "CORE/system_stm32f10x.c"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "FWLib",
+        "files": [
+          {
+            "path": "STM32F10x_FWLib/src/misc.c"
+          },
+          {
+            "path": "STM32F10x_FWLib/src/stm32f10x_fsmc.c"
+          },
+          {
+            "path": "STM32F10x_FWLib/src/stm32f10x_gpio.c"
+          },
+          {
+            "path": "STM32F10x_FWLib/src/stm32f10x_rcc.c"
+          },
+          {
+            "path": "STM32F10x_FWLib/src/stm32f10x_usart.c"
+          },
+          {
+            "path": "STM32F10x_FWLib/src/stm32f10x_tim.c"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "USMART",
+        "files": [
+          {
+            "path": "USMART/usmart.c"
+          },
+          {
+            "path": "USMART/usmart_config.c"
+          },
+          {
+            "path": "USMART/usmart_str.c"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "README",
+        "files": [
+          {
+            "path": "../README.TXT"
+          }
+        ],
+        "folders": []
+      },
+      {
+        "name": "Inc",
+        "files": [],
+        "folders": []
+      }
+    ]
+  },
+  "outDir": "build",
+  "deviceName": null,
+  "packDir": null,
+  "miscInfo": {
+    "uid": "61a664aa01748d22e2f4b3c14247dfe0"
+  },
+  "targets": {
+    "MPU6050": {
+      "excludeList": [
+        "<virtual_root>/USER/svm/main.c",
+        "<virtual_root>/SVM/main.c"
+      ],
+      "toolchain": "AC5",
+      "compileConfig": {
+        "cpuType": "Cortex-M3",
+        "floatingPointHardware": "none",
+        "useCustomScatterFile": false,
+        "scatterFilePath": "<YOUR_SCATTER_FILE>.sct",
+        "storageLayout": {
+          "RAM": [
+            {
+              "tag": "IRAM",
+              "id": 1,
+              "mem": {
+                "startAddr": "0x20000000",
+                "size": "0x10000"
+              },
+              "isChecked": true,
+              "noInit": false
+            }
+          ],
+          "ROM": [
+            {
+              "tag": "IROM",
+              "id": 1,
+              "mem": {
+                "startAddr": "0x08000000",
+                "size": "0x20000"
+              },
+              "isChecked": true,
+              "isStartup": true
+            }
+          ]
+        },
+        "options": "null"
+      },
+      "uploader": "STLink",
+      "uploadConfig": {
+        "bin": "",
+        "proType": "SWD",
+        "resetMode": "default",
+        "runAfterProgram": true,
+        "speed": 4000,
+        "address": "0x08000000",
+        "elFile": "None",
+        "optionBytes": ".eide/mpu6050.st.option.bytes.ini",
+        "otherCmds": ""
+      },
+      "uploadConfigMap": {
+        "JLink": {
+          "bin": "",
+          "baseAddr": "",
+          "cpuInfo": {
+            "vendor": "null",
+            "cpuName": "null"
+          },
+          "proType": 1,
+          "speed": 8000,
+          "otherCmds": ""
+        },
+        "STLink": {
+          "bin": "",
+          "proType": "SWD",
+          "resetMode": "default",
+          "runAfterProgram": true,
+          "speed": 4000,
+          "address": "0x8000000",
+          "elFile": "None",
+          "optionBytes": ".eide/mpu6050.st.option.bytes.ini",
+          "otherCmds": ""
+        },
+        "Custom": {
+          "bin": "./bin/${ProjectName}.fls",
+          "commandLine": "bash ./tools/program_flash.sh \"${ProgramFile}\"",
+          "eraseChipCommand": ""
+        }
+      },
+      "custom_dep": {
+        "name": "default",
+        "incList": [
+          "HARDWARE/LED",
+          "SYSTEM/delay",
+          "SYSTEM/sys",
+          "SYSTEM/usart",
+          ".",
+          "STM32F10x_FWLib/inc",
+          "CORE",
+          "HARDWARE/KEY",
+          "HARDWARE/LCD",
+          "HARDWARE/MPU6050/eMPL",
+          "HARDWARE/MPU6050",
+          "USMART",
+          ".cmsis/include",
+          "RTE/_MPU6050",
+          "HARDWARE/BEEP",
+          "HARDWARE/SVM"
+        ],
+        "libList": [],
+        "defineList": [
+          "STM32F10X_HD",
+          "USE_STDPERIPH_DRIVER"
+        ]
+      },
+      "builderOptions": {
+        "AC5": {
+          "version": 4,
+          "beforeBuildTasks": [],
+          "afterBuildTasks": [],
+          "global": {
+            "output-debug-info": "enable"
+          },
+          "c/cpp-compiler": {
+            "optimization": "level-2",
+            "one-elf-section-per-function": true,
+            "c99-mode": true,
+            "C_FLAGS": "--diag_suppress=1 --diag_suppress=1295",
+            "CXX_FLAGS": "--diag_suppress=1 --diag_suppress=1295",
+            "warnings": "unspecified"
+          },
+          "asm-compiler": {},
+          "linker": {
+            "output-format": "elf",
+            "ro-base": "0x08000000",
+            "rw-base": "0x20000000"
+          }
+        },
+        "AC6": {
+          "version": 3,
+          "beforeBuildTasks": [],
+          "afterBuildTasks": [],
+          "global": {
+            "use-microLIB": false,
+            "output-debug-info": "enable"
+          },
+          "c/cpp-compiler": {
+            "optimization": "level-0",
+            "language-c": "c99",
+            "language-cpp": "c++11",
+            "link-time-optimization": false
+          },
+          "asm-compiler": {
+            "$use": "asm-auto"
+          },
+          "linker": {
+            "output-format": "elf",
+            "misc-controls": "--diag_suppress=L6329"
+          }
+        },
+        "GCC": {
+          "version": 5,
+          "beforeBuildTasks": [],
+          "afterBuildTasks": [],
+          "global": {
+            "$float-abi-type": "softfp",
+            "output-debug-info": "enable",
+            "misc-control": "--specs=nosys.specs --specs=nano.specs"
+          },
+          "c/cpp-compiler": {
+            "language-c": "c11",
+            "language-cpp": "c++11",
+            "optimization": "level-debug",
+            "warnings": "all-warnings",
+            "one-elf-section-per-function": true,
+            "one-elf-section-per-data": true,
+            "C_FLAGS": "",
+            "CXX_FLAGS": ""
+          },
+          "asm-compiler": {
+            "ASM_FLAGS": ""
+          },
+          "linker": {
+            "output-format": "elf",
+            "remove-unused-input-sections": true,
+            "LD_FLAGS": "",
+            "LIB_FLAGS": "-lm"
+          }
+        },
+        "IAR_ARM": {
+          "version": 1,
+          "beforeBuildTasks": [],
+          "afterBuildTasks": [],
+          "global": {
+            "endian-mode": "little",
+            "runtime-lib": "normal",
+            "printf-formatter": "auto",
+            "scanf-formatter": "auto",
+            "output-debug-info": "enable"
+          },
+          "c/cpp-compiler": {
+            "optimization": "no",
+            "destroy-cpp-static-object": true
+          },
+          "asm-compiler": {
+            "case-sensitive-user-symbols": true
+          },
+          "linker": {
+            "output-format": "elf",
+            "auto-search-runtime-lib": true,
+            "perform-cpp-virtual-func-elimination": "enable",
+            "config-defines": []
+          }
+        }
+      }
+    }
+  },
+  "version": "3.5"
+}

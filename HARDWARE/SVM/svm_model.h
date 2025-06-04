@@ -1,0 +1,67 @@
+#ifndef __LIBSVM_MODEL_H__
+#define __LIBSVM_MODEL_H__
+
+#include <stdint.h>
+#define FEATURE_SIZE 14
+#define NR_CLASS 2
+#define TOTAL_SV 500
+#define NR_CLASSIFER(nc) (nc*(nc-1)/2)
+
+typedef struct {
+    uint8_t kernel_type;
+    //-- for polynomial kernel -->
+    uint8_t degree;
+    float gamma;
+    float coef0;
+    //<---------------------------
+    uint8_t nr_class;    /* number of classes, = 2 in regression/one class svm */
+    uint32_t total_sv;   /* total #SV */
+    float* rhos;          /* constants in decision functions (rho[k*(k-1)/2]) */
+    int32_t* label;      /* label of each class (label[k]) */
+    float* probA;        /* pariwise probability information */
+    float* probB;
+
+    float (*coefs)[TOTAL_SV];  /* coefficients for SVs in decision functions (sv_coef[k-1][l]) */
+    uint32_t vec_dim;
+    float* SVs;          /* SVs (SV[l]) */
+    int32_t* nr_sv;      /* number of SVs for each class (nSV[k]) */
+                         /* nSV[0] + nSV[1] + ... + nSV[k-1] = l */
+} Model;
+
+/** 
+ *  init svm params, must be invoked before predict
+ */
+void init_svm_params(Model *svm_model);
+
+/**
+ * two-class only
+ */
+float predict(const Model *svm_model, const float* x, int len);
+
+/**
+ * two-class only
+ */
+float predict_probability(const Model *svm_model, const float* x, int len);
+
+/**
+ * @brief predict multiclasses
+ * 
+ * @param svm_model   SVM model
+ * @param x           input x feature
+ * @param len         x length
+ * @return int32_t    return label
+ */
+int32_t multi_predict(const Model* svm_model, const float* x, int len);
+
+/**
+ * predict multi classes
+ * @param[in]  svm_model  SVM model
+ * @param[in]  x          input x feature
+ * @param[in]  len        x length
+ * @param[out] scores_buf probability of each score
+ * @param[in]  scores_buf_len  length of scores buf
+ */
+int32_t multi_predict_probability(const Model *svm_model, const float* x, int len, float* scores_buf, int scores_buf_len);
+
+
+#endif
