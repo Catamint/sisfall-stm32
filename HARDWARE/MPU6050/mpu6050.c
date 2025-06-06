@@ -40,8 +40,8 @@ u8 MPU_Init(void)
 	delay_ms(100);
 	MPU_Write_Byte(MPU_PWR_MGMT1_REG, 0X00); // 唤醒MPU6050
 	MPU_Set_Gyro_Fsr(3);					 // 陀螺仪传感器,±2000dps
-	MPU_Set_Accel_Fsr(0);					 // 加速度传感器,±2g
-	MPU_Set_Rate(50);						 // 设置采样率50Hz
+	MPU_Set_Accel_Fsr(3);					 // 加速度传感器,±16g
+	MPU_Set_Rate(200);						 // 设置采样率200Hz
 	MPU_Write_Byte(MPU_INT_EN_REG, 0X00);	 // 关闭所有中断
 	MPU_Write_Byte(MPU_USER_CTRL_REG, 0X00); // I2C主模式关闭
 	MPU_Write_Byte(MPU_FIFO_EN_REG, 0X00);	 // 关闭FIFO
@@ -51,7 +51,8 @@ u8 MPU_Init(void)
 	{
 		MPU_Write_Byte(MPU_PWR_MGMT1_REG, 0X01); // 设置CLKSEL,PLL X轴为参考
 		MPU_Write_Byte(MPU_PWR_MGMT2_REG, 0X00); // 加速度与陀螺仪都工作
-		MPU_Set_Rate(50);						 // 设置采样率为50Hz
+		MPU_Set_Rate(200);						 // 设置采样率为200Hz
+		MPU_Set_Accel_Fsr(3);					 // 加速度传感器,±16g
 	}
 	else
 		return 1;
@@ -133,9 +134,9 @@ u8 MPU_Get_Gyroscope(short *gx, short *gy, short *gz)
 	res = MPU_Read_Len(MPU_ADDR, MPU_GYRO_XOUTH_REG, 6, buf);
 	if (res == 0)
 	{
-		*gx = ((u16)buf[0] << 8) | buf[1];
-		*gy = ((u16)buf[2] << 8) | buf[3];
-		*gz = ((u16)buf[4] << 8) | buf[5];
+		*gx = (((u16)buf[0] << 8) | buf[1]);
+		*gy = (((u16)buf[2] << 8) | buf[3]);
+		*gz = (((u16)buf[4] << 8) | buf[5]);
 	}
 	return res;
 	;
@@ -150,9 +151,9 @@ u8 MPU_Get_Accelerometer(short *ax, short *ay, short *az)
 	res = MPU_Read_Len(MPU_ADDR, MPU_ACCEL_XOUTH_REG, 6, buf);
 	if (res == 0)
 	{
-		*ax = ((u16)buf[0] << 8) | buf[1];
-		*ay = ((u16)buf[2] << 8) | buf[3];
-		*az = ((u16)buf[4] << 8) | buf[5];
+		*ax = (((u16)buf[0] << 8) | buf[1]);
+		*ay = (((u16)buf[2] << 8) | buf[3]);
+		*az = (((u16)buf[4] << 8) | buf[5]);
 	}
 	return res;
 	;

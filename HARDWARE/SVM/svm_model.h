@@ -4,7 +4,7 @@
 #include <stdint.h>
 #define FEATURE_SIZE 14
 #define NR_CLASS 2
-#define TOTAL_SV 500
+#define TOTAL_SV 271
 #define NR_CLASSIFER(nc) (nc*(nc-1)/2)
 
 typedef struct {
