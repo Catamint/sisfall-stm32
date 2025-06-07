@@ -9,12 +9,14 @@
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h" 
 #include "stm32f10x_tim.h"
+#include "features.h"
 
 #include "beep.h"
 #include "math.h"
 #include "svm_model.h"
 
-#define WINDOW_SIZE 100
+#define WINDOW_SIZE 150
+#define EFFECTIVE_WINDOW_SIZE 100
 
 // 全局变量 - 在main函数外声明这些变量使它们可以在中断中访问
 // volatile float pitch, roll, yaw;    

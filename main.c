@@ -9,13 +9,14 @@
 #include "inv_mpu.h"
 #include "inv_mpu_dmp_motion_driver.h" 
 #include "stm32f10x_tim.h"
-
+#include "features.h"
 #include "beep.h"
 #include "math.h"
 #include "svm_model.h"
 
-#define WINDOW_SIZE 150
-#define EFFECTIVE_WINDOW_SIZE 100
+// #define WINDOW_SIZE 150
+// #define EFFECTIVE_WINDOW_SIZE 100
+#define SEGMENT_DURASTION 2 // 窗口大小，单位为s
 
 // 全局变量 - 在main函数外声明这些变量使它们可以在中断中访问
 
@@ -26,16 +27,11 @@ volatile u8 predict_flag = 0;           // 预测标志
 volatile u8 alarm_flag = 1;             // 警报标志
 volatile u8 alarm_peoceed = 0;          // 警报时长（次数x2）
 
-typedef struct {
-    float ax, ay, az;
-    float gx, gy, gz;
-} SensorData;
-
 SensorData window[WINDOW_SIZE];			// 时间窗口数据
 volatile uint32_t window_head = 0;		// 窗口头索引
 
 volatile int window_index = 0; 			// 窗口索引
-float features[14] = {0};      			// 特征数组
+float features[FEATURE_COUNT] = {0};    // 特征数组
 float prediction;              			// 预测值
 
 volatile uint32_t tim3_frames = 0;    	// 预期帧数
@@ -162,9 +158,9 @@ void TIM2_IRQHandler(void)
 		MPU_Get_Accelerometer(&aacx, &aacy, &aacz);
 		MPU_Get_Gyroscope(&gyrox, &gyroy, &gyroz);
 		// 存储到时间窗口
-		current_data.ax = (float)aacx / 8.0f;
-		current_data.ay = (float)aacy / 8.0f;
-		current_data.az = (float)aacz / 8.0f;
+		current_data.ax = (float)aacx * 0.01526f;
+		current_data.ay = (float)aacy * 0.01526f;
+		current_data.az = (float)aacz * 0.01526f;
 		current_data.gx = (float)gyrox;
 		current_data.gy = (float)gyroy;
 		current_data.gz = (float)gyroz;
@@ -177,7 +173,8 @@ void TIM2_IRQHandler(void)
 		if(key_report)
 		{
 			mpu6050_send_data(
-				aacx, aacy, aacz, gyrox, gyroy, gyroz);
+				(short)current_data.ax, (short)current_data.ay, (short)current_data.az,
+				(short)current_data.gx, (short)current_data.gy, (short)current_data.gz);
 		}
 
 		// 设置显示标志，主循环中处理显示
@@ -212,14 +209,16 @@ void TIM3_IRQHandler(void)
 
 		if (alarm_peoceed > 0 && alarm_flag) {
 			BEEP = !BEEP; // 开启蜂鸣器
+			LED0 = !LED0;
 			alarm_peoceed--;
 			if(alarm_peoceed < 1) {
 				BEEP = 0; // 关闭蜂鸣器
+				LED0 = 0; // 关闭LED
 			}
 		}
 
         // LED状态翻转
-        LED0 = !LED0;
+
     }
 }
 
@@ -286,48 +285,6 @@ float calculate_c3(float acc_x_max, float acc_x_min, float acc_y_max, float acc_
 	return sqrt(sum_squares);
 }
 
-// 计算水平方向上的方向变化 (C6特征)
-// float calculate_c6(float window[][6], int window_index)
-// {
-// 	float mean_acc_x = 0;
-// 	float mean_acc_x_prev = 0;
-// 	float sum_acc_x = 0;
-// 	float sum_acc_x_prev = 0;
-// 	int count = 0;
-// 	int i;
-	
-// 	// 首先计算窗口中所有acc_x的均值
-// 	for (i = 0; i < EFFECTIVE_WINDOW_SIZE; i++)
-// 	{
-// 		int idx = (window_index + i) % EFFECTIVE_WINDOW_SIZE;
-// 		sum_acc_x += window[idx][0]; // acc_x在第一列
-// 		count++;
-// 	}
-	
-// 	// 如果窗口为空，返回0
-// 	if (count == 0)
-// 		return 0;
-	
-// 	mean_acc_x = sum_acc_x / count;
-	
-// 	// 计算前一个窗口的acc_x均值 (把窗口向后移动一位)
-// 	count = 0;
-// 	for (i = 0; i < EFFECTIVE_WINDOW_SIZE; i++)
-// 	{
-// 		int idx = (window_index + i - 1 + EFFECTIVE_WINDOW_SIZE) % EFFECTIVE_WINDOW_SIZE;
-// 		sum_acc_x_prev += window[idx][0];
-// 		count++;
-// 	}
-	
-// 	if (count == 0)
-// 		return 0;
-	
-// 	mean_acc_x_prev = sum_acc_x_prev / count;
-	
-// 	// C6特征: 前一时刻均值乘以当前时刻均值
-// 	return mean_acc_x_prev * mean_acc_x;
-// }
-
 int get_features(SensorData* window, int window_index, float* features)
 {
 	int p, i;
@@ -380,56 +337,53 @@ int get_features(SensorData* window, int window_index, float* features)
 int standard(float* features, int size)
 {
 	// 归一化参数，顺序需与特征顺序一致
-	// features[0]: C3特征（幅值RMS），[0, 65535]
-	// features[1]: C6特征（未用），[0, 1]
-	// features[2]: acc_x_max, [-32768, 32767]
-	// features[3]: acc_x_min, [-32768, 32767]
-	// features[4]: acc_y_max, [-32768, 32767]
-	// features[5]: acc_y_min, [-32768, 32767]
-	// features[6]: acc_z_max, [-32768, 32767]
-	// features[7]: acc_z_min, [-32768, 32767]
-	// features[8]: rot_x_max, [-7271, 3804]
-	// features[9]: rot_x_min, [-7271, 3804]
-	// features[10]: rot_y_max, [-4876, 6314]
-	// features[11]: rot_y_min, [-4876, 6314]
-	// features[12]: rot_z_max, [-10024, 3002]
-	// features[13]: rot_z_min, [-10024, 3002]
-
-	const float min_vals[14] = {
-		0.0f,      // C3
-		0.0f,      // C6
-		-2768.0f, // acc_x_max
-		-32768.0f, // acc_x_min
-		-2768.0f, // acc_y_max
-		-32768.0f, // acc_y_min
-		-2768.0f, // acc_z_max
-		-32768.0f, // acc_z_min
-		-32768.0f,  // rot_x_max
-		-32768.0f,  // rot_x_min
-		-32768.0f,  // rot_y_max
-		-32768.0f,  // rot_y_min
-		-32768.0f, // rot_z_max
-		-32768.0f  // rot_z_min
+	const float min_vals[FEATURE_COUNT] = {
+		5.0990195135927845f,      // acc_mag_min
+		0.0048009578673858f,      // C5
+		0.0117173029330312f,      // C4
+		1.0669582934679311f,      // rot_z_std
+		3.045089835194452f,       // C2
+		3.0092784468936093f,      // C13
+		0.0182726571685674f,      // C14
+		0.0766f,                  // C11
+		-301.0f,                  // acc_y_mean
+		-1.4696113013998708f,     // acc_mag_kurtosis
+		1.4302447343024898f,      // rot_y_std
+		2.549252217550644f,       // C9
+		-316.6f,                  // acc_z_mean
+		0.0f,                     // acc_x_zero_cross
+		// -1.94979797979798f,       // C6
+		// 0.9630680142129112f,      // acc_x_std
+		// 1.157826793132302f,       // acc_mag_std
+		// 2.0110301897889125f,      // C8
+		// 0.0f,                     // rot_y_zero_cross
+		// 11.575836902790224f       // C3
 	};
-	const float max_vals[14] = {
-		32767.0f,  // C3
-		1.0f,      // C6
-		32767.0f,  // acc_x_max
-		2767.0f,  // acc_x_min
-		32767.0f,  // acc_y_max
-		2767.0f,  // acc_y_min
-		32767.0f,  // acc_z_max
-		2767.0f,  // acc_z_min
-		32767.0f,   // rot_x_max
-		32767.0f,   // rot_x_min
-		32767.0f,   // rot_y_max
-		32767.0f,   // rot_y_min
-		32767.0f,   // rot_z_max
-		32767.0f    // rot_z_min
+	const float max_vals[FEATURE_COUNT] = {
+		276.2498868778049f,       // acc_mag_min
+		1.5561000272115857f,      // C5
+		2.235869092574518f,       // C4
+		1808.2899269752072f,      // rot_z_std
+		370.77581740312905f,      // C2
+		368.7868252132574f,       // C13
+		6.533341351865829f,       // C14
+		9.5614f,                  // C11
+		172.48f,                  // acc_y_mean
+		85.38269105926449f,       // acc_mag_kurtosis
+		2474.115633918512f,       // rot_y_std
+		786.7371798135704f,       // C9
+		262.1f,                   // acc_z_mean
+		44.0f,                    // acc_x_zero_cross
+		// 71678.3996969697f,        // C6
+		// 521.8357197432923f,       // acc_x_std
+		// 695.9808423309154f,       // acc_mag_std
+		// 673.7468393509193f,       // C8
+		// 34.0f,                    // rot_y_zero_cross
+		// 7774.635039665849f        // C3
 	};
 
 	int i;
-	for (i = 0; i < size && i < 14; i++)
+	for (i = 0; i < size && i < FEATURE_COUNT; i++)
 	{
 		float minv = min_vals[i];
 		float maxv = max_vals[i];
@@ -525,7 +479,7 @@ int main(void)
         if(predict_flag)
         {
             predict_flag = 0;
-            int current_head = window_head; // 当前窗口的起始位置
+            // int current_head = window_head; // 当前窗口的起始位置
             // // 计算触发警报的阈值
             // alarm_threshold = (short)((aacx)/100 + abs(aacy)/100 + abs(aacz)/100);
             // // 显示阈值
@@ -534,29 +488,36 @@ int main(void)
             {
                 // 进行预测
 				LCD_ShowString(30, 0, 120, 16, 16, "predicting... ");
-				get_features(window, current_head, features);
+				// get_features(window, window_head, features);
+				get_feature(window, window_head, SEGMENT_DURASTION, features);
 				LCD_ShowString(30, 20, 100, 16, 16,"features:");
 				standard(features, FEATURE_SIZE);
+				u32 temp;
 				for(int i = 0; i < FEATURE_SIZE; i++)
 				{
 					if (features[i] < 0){
 						LCD_ShowChar(180-20, 20 + i * 20, '-', 16, 0);
-						features[i] = -features[i]; // 确保特征值为正
-					} else 
+						temp = -features[i]*100;
+					} else {
+						temp = features[i]*100; 
 						LCD_ShowChar(180-20, 20 + i * 20, ' ', 16, 0);
-					LCD_ShowNum(180, 20 + i * 20, (u32)(features[i]*100), 5, 16);
+					}
+					LCD_ShowNum(180, 20 + i * 20, (u32)(temp), 5, 16);
 				}
                 prediction = predict(&svm_model, features, FEATURE_SIZE);
 
 				LCD_ShowString(30, 0, 120, 16, 16, "prediction: ");
+				// LCD_ShowChar(180-20, 0, '-', 16, 0);
 				if(prediction < 0) {
 						LCD_ShowChar(180-20, 0, '-', 16, 0);
-						prediction = -prediction;
-					} else 
+						temp = -prediction*100;
+					} else {
+						temp = prediction*100;
 						LCD_ShowChar(180-20, 0, ' ', 16, 0);
-                LCD_ShowNum(180, 0, (u32)(prediction*100), 5, 16);
+					}
+                	LCD_ShowNum(180, 0, (u32)(temp), 5, 16);
                 
-				if(prediction > 100)
+				if(prediction > 1)
 					// 触发警报
 					for(short i = 0; i < 5; i++)
 					{

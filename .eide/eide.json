@@ -12,6 +12,9 @@
         "files": [
           {
             "path": "main.c"
+          },
+          {
+            "path": "User/features.c"
           }
         ],
         "folders": []
@@ -135,7 +138,11 @@
       },
       {
         "name": "Inc",
-        "files": [],
+        "files": [
+          {
+            "path": "Inc/features.h"
+          }
+        ],
         "folders": []
       }
     ]
@@ -245,7 +252,9 @@
           ".cmsis/include",
           "RTE/_MPU6050",
           "HARDWARE/BEEP",
-          "HARDWARE/SVM"
+          "HARDWARE/SVM",
+          "Inc",
+          "User"
         ],
         "libList": [],
         "defineList": [
